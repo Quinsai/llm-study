@@ -5,9 +5,11 @@ from dataset.pretrain.dataset import CharDataset
 from dataset.sft.dataset import SFTDataset
 from model.model import TinyModel
 from utils.visualizer import draw_line_plot
+from utils.device_detact import device_detact
 
 class TinyTrainer:
     def __init__(self, corpus_path, sft_message_path, block_size, batch_size, num_epoch_pretrain, num_epoch_sft, iter_per_epoch, lr, fixed_prompt1, fixed_prompt2, tokenizer):
+        self.device = device_detact()
         self.block_size = block_size
         self.batch_size = batch_size
         self.num_epoch_pretrain = num_epoch_pretrain
@@ -22,7 +24,7 @@ class TinyTrainer:
 
         self.sft_dataset = SFTDataset(sft_message_path, block_size=block_size, tokenizer=self.tokenizer)
 
-        self.model = TinyModel(self.vocab_size, block_size=self.block_size)
+        self.model = TinyModel(self.vocab_size, block_size=self.block_size).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
 
     def pretrain(self, draw=False, save_path=None):
@@ -32,6 +34,8 @@ class TinyTrainer:
             epoch_loss = 0
             for i, (x, y) in enumerate(data_loader):
                 self.optimizer.zero_grad()
+                x = x.to(self.device)
+                y = y.to(self.device)
                 logits, loss = self.model(x,y)
                 loss.backward()
                 epoch_loss += loss.item()
@@ -54,6 +58,8 @@ class TinyTrainer:
             epoch_loss = 0
             for i, (x, y) in enumerate(data_loader):
                 self.optimizer.zero_grad()
+                x = x.to(self.device)
+                y = y.to(self.device)
                 logits, loss = self.model(x,y)
                 loss.backward()
                 epoch_loss += loss.item()
@@ -72,7 +78,7 @@ class TinyTrainer:
     def generate(self, prompt):
         input_text = self.fixed_prompt1 + prompt + self.fixed_prompt2
         input_idx = self.tokenizer.encode(input_text)
-        input_idx = torch.tensor([input_idx], dtype=torch.long)
+        input_idx = torch.tensor([input_idx], dtype=torch.long).to(self.device)
         output_idx = self.model.generate(input_idx)
         output_idx = output_idx[0].tolist()
         output_text = self.tokenizer.decode(output_idx)
@@ -88,6 +94,6 @@ class TinyTrainer:
             "block_size": self.block_size,
         }, path)
 
-    def load_checkpoint(self, path, map_location="cpu"):
-        ckpt = torch.load(path, map_location=map_location)
+    def load_checkpoint(self, path):
+        ckpt = torch.load(path, map_location=self.device)
         self.model.load_state_dict(ckpt["model_state"])

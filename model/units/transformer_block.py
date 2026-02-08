@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from utils.device_detact import device_detact
 
 class TransformerBlock(nn.Module):
     def __init__(self, n_head, n_embd):
@@ -23,7 +24,7 @@ class TransformerBlock(nn.Module):
         h = self.ln1(x)
 
         resi1 = h
-        mask = torch.tril(torch.ones(block_size, block_size)).unsqueeze(0).expand((batch_size * self.n_head, block_size, block_size))
+        mask = torch.tril(torch.ones(block_size, block_size)).unsqueeze(0).expand((batch_size * self.n_head, block_size, block_size)).to(device_detact())
         mask = (1-mask) * -1e9
         h, _ = self.attn(h, h, h, attn_mask=mask)
         h = h + resi1

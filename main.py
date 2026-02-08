@@ -19,7 +19,7 @@ fixed_prompt_len = fixed_prompt_len1 + fixed_prompt_len2
 if __name__ == "__main__":
     corpus_path = "dataset/tiny_corpus.txt"
     sft_message_path = "dataset/tiny_sft_message.txt"
-    tokenizer_path = "dataset/tokenizer/tokenizer.pkl"
+    tokenizer_path = "dataset/tokenizer/tokenizer.msg"
     pretrain_model_path = "model/pretrain_model.pt"
     sft_model_path = "model/sft_model.pt"
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     load_model_path = ""
 
-    if start_from == "pretrain" or not os.path.exists(pretrain_model_path):
+    if start_from == "pretrain" or start_from == "tokenizer" or not os.path.exists(pretrain_model_path):
         trainer.pretrain(draw=True, save_path=pretrain_model_path)
         print("------end of pretrain-----")
         trainer.sft_train(draw=True, save_path=sft_model_path)

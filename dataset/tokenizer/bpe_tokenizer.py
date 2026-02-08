@@ -1,5 +1,5 @@
 from collections import defaultdict
-import pickle
+import msgpack
 
 class BPETokenizer:
     def __init__(self, corpus_path, sft_message_path, tokenizer_path, min_max_freq=5, max_token_len=15):
@@ -124,7 +124,7 @@ class BPETokenizer:
     
     def save(self, path):
         with open(path, "wb") as f:
-            pickle.dump({
+            msgpack.pack({
                 "itos": self.itos,
                 "stoi": self.stoi,
                 "bos_token": self.bos_token,
@@ -135,7 +135,7 @@ class BPETokenizer:
                 "vocab_size": self.vocab_size,
                 "max_token_len": self.max_token_len,
                 "merge_list": self.merge_list
-            }, f)
+            }, f, use_bin_type=True)
 
     @classmethod
     def _from_data(cls, itos, stoi, bos_token, eos_token, pad_token, unk_token, special_tokens, vocab_size, max_token_len, merge_list):
@@ -148,14 +148,14 @@ class BPETokenizer:
         obj.unk_token = unk_token
         obj.special_tokens = special_tokens
         obj.vocab_size = vocab_size
-        obj.max_token_len = max_token_len,
+        obj.max_token_len = max_token_len
         obj.merge_list = merge_list
         return obj
 
     @classmethod
     def load(cls, path):
         with open(path, "rb") as f:
-            data = pickle.load(f)
+            data = msgpack.unpack(f, raw=False)
         return cls._from_data(
             itos = data["itos"],
             stoi = data["stoi"],
