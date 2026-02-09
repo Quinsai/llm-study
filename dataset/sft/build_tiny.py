@@ -5,7 +5,7 @@ dataset = load_dataset(
     split="train"
 )
 
-N = 6000
+N = 30000
 texts = []
 
 for i in range(N):
@@ -19,6 +19,7 @@ with open("dataset/tiny_sft_message.txt", "w", encoding="utf-8") as f:
     for message in texts:
         f.write("###User:\n" + message[0] + "\n")
         f.write("###Agent:\n" + message[1] + "\n")
+        f.write("#----end----#\n")
         f.write("\n")
 
 print(f"Saved {len(texts)} lines to tiny_sft_message.txt")

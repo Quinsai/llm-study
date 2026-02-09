@@ -155,7 +155,7 @@ class BPETokenizer:
     @classmethod
     def load(cls, path):
         with open(path, "rb") as f:
-            data = msgpack.unpack(f, raw=False)
+            data = msgpack.unpack(f, raw=False, strict_map_key=False)
         return cls._from_data(
             itos = data["itos"],
             stoi = data["stoi"],

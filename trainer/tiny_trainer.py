@@ -1,14 +1,14 @@
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch
-from dataset.pretrain.dataset import CharDataset
+from dataset.pretrain.dataset import PretrainDataset
 from dataset.sft.dataset import SFTDataset
 from model.model import TinyModel
 from utils.visualizer import draw_line_plot
 from utils.device_detact import device_detact
 
 class TinyTrainer:
-    def __init__(self, corpus_path, sft_message_path, block_size, batch_size, num_epoch_pretrain, num_epoch_sft, iter_per_epoch, lr, fixed_prompt1, fixed_prompt2, tokenizer):
+    def __init__(self, pretrain_bin_path, sft_bin_prefix, block_size, batch_size, num_epoch_pretrain, num_epoch_sft, iter_per_epoch, lr_pretrain, lr_sft, fixed_prompt1, fixed_prompt2, tokenizer):
         self.device = device_detact()
         self.block_size = block_size
         self.batch_size = batch_size
@@ -20,16 +20,18 @@ class TinyTrainer:
         self.tokenizer = tokenizer
         self.vocab_size = self.tokenizer.vocab_size
 
-        self.pretrain_dataset = CharDataset(corpus_path, block_size=block_size, tokenizer=self.tokenizer)
+        self.pretrain_dataset = PretrainDataset(pretrain_bin_path, block_size)
+        self.sft_dataset = SFTDataset(sft_bin_prefix, block_size)
 
-        self.sft_dataset = SFTDataset(sft_message_path, block_size=block_size, tokenizer=self.tokenizer)
-
+        self.lr_pretrain = lr_pretrain
+        self.lr_sft = lr_sft
         self.model = TinyModel(self.vocab_size, block_size=self.block_size).to(self.device)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=lr_pretrain)
 
     def pretrain(self, draw=False, save_path=None):
         data_loader = DataLoader(self.pretrain_dataset, batch_size=self.batch_size, shuffle=True)
         epoch_loss_list = []
+        self._adjust_lr(self.lr_pretrain)
         for epoch in range(self.num_epoch_pretrain):
             epoch_loss = 0
             for i, (x, y) in enumerate(data_loader):
@@ -54,6 +56,7 @@ class TinyTrainer:
     def sft_train(self, draw=False, save_path=None):
         data_loader = DataLoader(self.sft_dataset, batch_size=self.batch_size, shuffle=True)
         epoch_loss_list = []
+        self._adjust_lr(self.lr_sft)
         for epoch in range(self.num_epoch_sft):
             epoch_loss = 0
             for i, (x, y) in enumerate(data_loader):
@@ -82,9 +85,10 @@ class TinyTrainer:
         output_idx = self.model.generate(input_idx)
         output_idx = output_idx[0].tolist()
         output_text = self.tokenizer.decode(output_idx)
-        _, _, output_text = output_text.partition("###Agent:")
-        if output_text[0] == '\n':
-            output_text = output_text[1:]
+        # _, _, output_text = output_text.partition("###Agent:")
+        # if output_text[0] == '\n':
+        #     output_text = output_text[1:]
+        _, _, output_text = output_text.partition(self.fixed_prompt2)
         return output_text
     
     def save_checkpoint(self, path):
@@ -97,3 +101,7 @@ class TinyTrainer:
     def load_checkpoint(self, path):
         ckpt = torch.load(path, map_location=self.device)
         self.model.load_state_dict(ckpt["model_state"])
+
+    def _adjust_lr(self, new_lr):
+        for g in self.optimizer.param_groups:
+            g['lr'] = new_lr
