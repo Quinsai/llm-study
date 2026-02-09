@@ -5,7 +5,7 @@ dataset = load_dataset(
     split="train"
 )
 
-N = 30000
+N = 50000
 texts = []
 
 for i in range(N):
