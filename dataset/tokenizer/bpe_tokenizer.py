@@ -116,7 +116,10 @@ class BPETokenizer:
     def decode(self, ids):
         chars = []
         for i in ids:
-            char = self.itos[i]
+            if i == -100:
+                char = '<MAK>'
+            else:
+                char = self.itos[i]
             if char in self.special_tokens:
                 continue
             chars.append(char)

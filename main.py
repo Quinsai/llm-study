@@ -5,13 +5,13 @@ from dataset.sft.dataset import build_sft_bin
 import os
 import argparse
 
-block_size=128
-batch_size=64
-num_epoch_pretrain=500
-num_epoch_sft=400
+block_size=256
+batch_size=32
+num_epoch_pretrain=700
+num_epoch_sft=600
 iter_per_epoch=10
 lr_pretrain=3e-4
-lr_sft=5e-5
+lr_sft=1e-4
 
 fixed_prompt1 = "###User:\n"
 fixed_prompt_len1 = len(fixed_prompt1)

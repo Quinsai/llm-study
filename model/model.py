@@ -15,7 +15,7 @@ class TinyModel(nn.Module):
         self.token_embd = TokenEmbedding(vocab_size, n_embd)
         self.position_embd = PositionalEmbedding(block_size, n_embd)
         self.net = nn.Sequential(
-            *[TransformerBlock(n_head=16, n_embd=n_embd) for _ in range(8)],
+            *[TransformerBlock(n_head=16, n_embd=n_embd) for _ in range(12)],
             nn.LayerNorm(n_embd)
         )
         self.output_head = LinearHead(n_embd=n_embd, vocab_size=vocab_size)

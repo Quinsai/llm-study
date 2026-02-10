@@ -2,11 +2,11 @@ from datasets import load_dataset
 
 dataset = load_dataset(
     "wikitext",
-    "wikitext-2-raw-v1",
+    "wikitext-103-raw-v1",
     split="train"
 )
 
-N = 30000
+N = 300000
 texts = []
 
 for i in range(N):

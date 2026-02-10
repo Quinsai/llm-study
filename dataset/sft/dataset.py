@@ -34,6 +34,7 @@ def build_sft_bin(message_path, tokenizer, block_size, out_prefix):
                     if encoded_message[i:i+len(encoded_answer_start)] == encoded_answer_start:
                         start_of_answer = i
                         break
+                start_of_answer = start_of_answer - 1 + len(encoded_answer_start)
                 x = encoded_message[:-1]
                 y = encoded_message[1:]
                 pad_len_x = block_size - len(x)
@@ -43,6 +44,9 @@ def build_sft_bin(message_path, tokenizer, block_size, out_prefix):
                 if pad_len_y > 0:
                     y = y + [-100] * pad_len_y
                 y[:start_of_answer] = [-100] * start_of_answer
+                # print(tokenizer.decode(x))
+                # print(tokenizer.decode(y))
+                # print("===========================")
                 # x = torch.tensor(x, dtype=torch.long)
                 # y = torch.tensor(y, dtype=torch.long)
                 x_list.append(x)
